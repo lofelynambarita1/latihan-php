@@ -1,160 +1,94 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>PHP - Aplikasi Todolist</title>
-    <link href="/assets/vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css" rel="stylesheet" />
+  <meta charset="utf-8">
+  <title>Todo List</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <style>
+    .todo-done { text-decoration: line-through; color: #6c757d; }
+  </style>
 </head>
-<body>
-<div class="container-fluid p-5">
-    <div class="card">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1>Todo List</h1>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTodo">Tambah Data</button>
-            </div>
-            <hr />
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Aktivitas</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Tanggal Dibuat</th>
-                        <th scope="col">Tindakan</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php if (!empty($todos)): ?>
-                    <?php foreach ($todos as $i => $todo): ?>
-                    <tr>
-                        <td><?= $i + 1 ?></td>
-                        <td><?= htmlspecialchars($todo['activity']) ?></td>
-                        <td>
-                            <?php if ($todo['status']): ?>
-                                <span class="badge bg-success">Selesai</span>
-                            <?php else: ?>
-                                <span class="badge bg-danger">Belum Selesai</span>
-                            <?php endif; ?>
-                        </td>
-                        <td><?= date('d F Y - H:i', strtotime($todo['created_at'])) ?></td>
-                        <td>
-                            <button class="btn btn-sm btn-warning"
-                                onclick="showModalEditTodo(<?= $todo['id'] ?>, '<?= htmlspecialchars(addslashes($todo['activity'])) ?>', <?= $todo['status'] ?>)">
-                                Ubah
-                            </button>
-                            <button class="btn btn-sm btn-danger"
-                                onclick="showModalDeleteTodo(<?= $todo['id'] ?>, '<?= htmlspecialchars(addslashes($todo['activity'])) ?>')">
-                                Hapus
-                            </button>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="5" class="text-center text-muted">Belum ada data tersedia!</td>
-                    </tr>
-                <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+<body class="bg-light">
+  <div class="container py-5">
+    <h1 class="mb-4 text-center text-primary">✨ Todo List</h1>
 
-<!-- MODAL ADD TODO -->
-<div class="modal fade" id="addTodo" tabindex="-1" aria-labelledby="addTodoLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addTodoLabel">Tambah Data Todo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="?page=create" method="POST">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="inputActivity" class="form-label">Aktivitas</label>
-                        <input type="text" name="activity" class="form-control" id="inputActivity"
-                            placeholder="Contoh: Belajar membuat aplikasi website sederhana" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+    <!-- Filter & Search -->
+    <form method="get" class="d-flex mb-4 justify-content-center">
+      <input type="hidden" name="page" value="index">
+      <select name="filter" class="form-select w-auto me-2">
+        <option value="all" <?= ($filter==='all') ? 'selected' : '' ?>>Semua</option>
+        <option value="unfinished" <?= ($filter==='unfinished') ? 'selected' : '' ?>>Belum Selesai</option>
+        <option value="finished" <?= ($filter==='finished') ? 'selected' : '' ?>>Selesai</option>
+      </select>
+      <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Cari judul atau deskripsi..." class="form-control w-25 me-2">
+      <button class="btn btn-primary">🔍 Cari</button>
+    </form>
 
-<!-- MODAL EDIT TODO -->
-<div class="modal fade" id="editTodo" tabindex="-1" aria-labelledby="editTodoLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editTodoLabel">Ubah Data Todo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="?page=update" method="POST">
-                <input name="id" type="hidden" id="inputEditTodoId">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="inputEditActivity" class="form-label">Aktivitas</label>
-                        <input type="text" name="activity" class="form-control" id="inputEditActivity"
-                            placeholder="Contoh: Belajar membuat aplikasi website sederhana" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="selectEditStatus" class="form-label">Status</label>
-                        <select class="form-select" name="status" id="selectEditStatus">
-                            <option value="0">Belum Selesai</option>
-                            <option value="1">Selesai</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+    <!-- Form Add -->
+    <form method="post" action="?page=create" class="card card-body mb-4 shadow-sm">
+      <div class="row g-2">
+        <div class="col-md-4"><input type="text" name="title" class="form-control" placeholder="Judul todo" required></div>
+        <div class="col-md-6"><input type="text" name="description" class="form-control" placeholder="Deskripsi (opsional)"></div>
+        <div class="col-md-2"><button class="btn btn-success w-100">Tambah</button></div>
+      </div>
+    </form>
 
-<!-- MODAL DELETE TODO -->
-<div class="modal fade" id="deleteTodo" tabindex="-1" aria-labelledby="deleteTodoLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteTodoLabel">Hapus Data Todo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Todo list -->
+    <ul id="todo-list" class="list-group shadow-sm">
+      <?php if (!empty($todos)): ?>
+        <?php foreach ($todos as $todo): ?>
+          <li class="list-group-item d-flex justify-content-between align-items-center" data-id="<?= $todo['id'] ?>">
+            <div>
+              <input type="checkbox"
+                     onchange="toggleFinish(<?= $todo['id'] ?>, this.checked)"
+                     <?= ($todo['is_finished'] == 't' || $todo['is_finished'] == '1' || $todo['is_finished'] === true) ? 'checked' : '' ?>>
+              <span class="<?= ($todo['is_finished'] == 't' || $todo['is_finished'] == '1' || $todo['is_finished'] === true) ? 'todo-done' : '' ?>">
+                <?= htmlspecialchars($todo['title']) ?>
+              </span>
+              <div class="small text-secondary"><?= htmlspecialchars($todo['description']) ?></div>
             </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    Kamu akan menghapus todo <strong class="text-danger" id="deleteTodoActivity"></strong>.
-                    Apakah kamu yakin?
-                </div>
+            <div>
+              <a href="?page=detail&id=<?= $todo['id'] ?>" class="btn btn-info btn-sm me-1">Detail</a>
+              <a href="?page=delete&id=<?= $todo['id'] ?>" onclick="return confirm('Yakin hapus?')" class="btn btn-danger btn-sm">Hapus</a>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <a id="btnDeleteTodo" class="btn btn-danger">Ya, Tetap Hapus</a>
-            </div>
-        </div>
-    </div>
-</div>
+          </li>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <li class="list-group-item text-center text-muted">Belum ada data tersedia.</li>
+      <?php endif; ?>
+    </ul>
+  </div>
 
-<script src="/assets/vendor/bootstrap-5.3.8-dist/js/bootstrap.min.js"></script>
-<script>
-function showModalEditTodo(todoId, activity, status) {
-    document.getElementById("inputEditTodoId").value = todoId;
-    document.getElementById("inputEditActivity").value = activity;
-    document.getElementById("selectEditStatus").value = status;
-    var myModal = new bootstrap.Modal(document.getElementById("editTodo"));
-    myModal.show();
-}
-function showModalDeleteTodo(todoId, activity) {
-    document.getElementById("deleteTodoActivity").innerText = activity;
-    document.getElementById("btnDeleteTodo").setAttribute("href", `?page=delete&id=${todoId}`);
-    var myModal = new bootstrap.Modal(document.getElementById("deleteTodo"));
-    myModal.show();
-}
-</script>
+  <script>
+    // Sortable
+    new Sortable(document.getElementById('todo-list'), {
+      animation: 150,
+      onEnd: async function(evt) {
+        const data = Array.from(evt.to.children).map((el, i) => ({ id: el.dataset.id, order: i + 1 }));
+        await fetch('?page=reorder', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+      }
+    });
+
+    // Toggle status menggunakan endpoint khusus (tidak merubah title/description)
+    async function toggleFinish(id, checked) {
+      const body = `id=${encodeURIComponent(id)}&is_finished=${checked ? '1' : '0'}`;
+      const res = await fetch('?page=toggle', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body
+      });
+      // optional: perbarui tampilan (langsung reload sederhana)
+      if (res.ok) {
+        location.reload();
+      } else {
+        alert('Gagal mengubah status');
+      }
+    }
+  </script>
 </body>
 </html>
